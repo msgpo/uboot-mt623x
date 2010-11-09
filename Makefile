@@ -970,6 +970,11 @@ omap730p2_cs3boot_config :	unconfig
 	fi;
 	@$(MKCONFIG) -n $@ -a omap730p2 arm arm926ejs omap730p2 ti omap
 
+sciphone_g2_config: unconfig
+	@mkdir -p $(obj)include
+	@ > $(obj)include/config.h
+	@$(MKCONFIG) -n $@ -a sciphone_g2 arm arm926ejs sciphone_g2 mtk mtk
+
 spear300_config \
 spear310_config \
 spear320_config :	unconfig
