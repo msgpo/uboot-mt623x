@@ -104,4 +104,32 @@
 #define CONFIG_SYS_MAX_FLASH_SECT	512
 #define CONFIG_SYS_MAX_FLASH_BANKS	1
 
+/* Enable support for mmc. */
+#define CONFIG_MMC			1
+
+#ifndef DEBUG
+/* #define DEBUG */
 #endif
+
+#ifdef CONFIG_MMC
+
+/*
+ * The MMC/SD support for is done through the Generic MMC framework
+ * of u-boot. Following options shall be enabled in the default configuration
+ * to include MMC/SD support.
+ */
+#define CONFIG_GENERIC_MMC
+#define CONFIG_CMD_MMC
+#define CONFIG_MTK_MMC
+
+/*
+ * To include File system support for MMC, following configuration options
+ * shall be enabled
+ */
+#define CONFIG_DOS_PARTITION
+#define CONFIG_CMD_EXT2
+#define CONFIG_CMD_FAT
+
+#endif /* CONFIG_MMC */
+
+#endif /* __CONFIG_H */

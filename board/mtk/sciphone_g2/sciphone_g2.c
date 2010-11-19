@@ -24,6 +24,7 @@
 #include <asm/io.h>
 #include <asm/arch-mtk/emi.h>
 #include <asm/arch-mtk/system.h>
+#include <asm/arch/mmc.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -117,3 +118,15 @@ int dram_init(void)
 #endif
 	return 0;
 }
+
+#ifdef CONFIG_GENERIC_MMC
+
+int board_mmc_init(bd_t *bis)
+{
+
+#ifdef CONFIG_MTK_MMC
+	return mtk_mmc_init(0);
+#endif
+
+}
+#endif
