@@ -252,7 +252,6 @@ fixnext:
 #endif
 
 clear_bss:
-#ifndef CONFIG_PRELOADER
 	ldr	r0, _bss_start_ofs
 	ldr	r1, _bss_end_ofs
 	mov	r4, r6			/* reloc addr */
@@ -265,6 +264,7 @@ clbss_l:str	r2, [r0]		/* clear loop...		    */
 	cmp	r0, r1
 	bne	clbss_l
 
+#ifndef CONFIG_PRELOADER
 	bl coloured_LED_init
 	bl red_LED_on
 #endif
@@ -294,12 +294,14 @@ _board_init_r_ofs:
 	.word board_init_r - _start
 #endif
 
+#ifndef CONFIG_PRELOADER
 _rel_dyn_start_ofs:
 	.word __rel_dyn_start - _start
 _rel_dyn_end_ofs:
 	.word __rel_dyn_end - _start
 _dynsym_start_ofs:
 	.word __dynsym_start - _start
+#endif
 
 /*
  *************************************************************************
