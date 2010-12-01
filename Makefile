@@ -972,8 +972,8 @@ omap730p2_cs3boot_config :	unconfig
 
 sciphone_g2_config: unconfig
 	@mkdir -p $(obj)include
-	@ > $(obj)include/config.h
 	@$(MKCONFIG) -n $@ -a sciphone_g2 arm arm926ejs sciphone_g2 mtk mtk
+	@echo "CONFIG_NAND_U_BOOT = y" >> $(obj)include/config.mk
 
 spear300_config \
 spear310_config \

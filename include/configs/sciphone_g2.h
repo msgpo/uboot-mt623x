@@ -20,12 +20,47 @@
  *
  */
 
+/*
+ * U-Boot configuration is split in two parts:
+ * - SPL configuration
+ * - normal configuration
+ *
+ * MT62XX platform has IPL (Initial Program Loader) in ROM.
+ * After processor power up IPL execution is started. IPL tries to load
+ * code from NAND to internal RAM (64KB) and starts executing loaded code.
+ * SBL (Secondary Program Loader) is loaded by IPL. SBL configures basic
+ * peripherals (PLL, SDRAM memory) and loads U-Boot from NAND to SDRAM.
+ */
+
 #ifndef __CONFIG_H
 #define __CONFIG_H
 
 #include "asm/arch-mtk/mt6235.h"
 
 #define CONFIG_ARM926EJS
+
+/* DRAM memory related configurations */
+#define CONFIG_NR_DRAM_BANKS		1
+#define PHYS_SDRAM_1			0x00000000
+#define PHYS_SDRAM_1_SIZE		0x04000000 /* 64 MB */
+#define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
+
+/* NAND memory related configurations */
+#define CONFIG_NAND_MT62XX
+#define CONFIG_SYS_MAX_NAND_DEVICE	1
+#define CONFIG_SYS_NAND_BASE		MTK_NFI_BASE
+
+/* There is no NOR flash, so undefine these commands */
+#undef CONFIG_CMD_FLASH
+#undef CONFIG_CMD_IMLS
+#define CONFIG_SYS_NO_FLASH
+
+
+#ifndef CONFIG_PRELOADER
+
+/*
+ * Configuration of U-Boot when running from DRAM (normal operation).
+ */
 
 /* We have already been loaded to RAM */
 #define CONFIG_SKIP_LOWLEVEL_INIT
@@ -40,16 +75,8 @@
 #define CONFIG_BAUDRATE			115200
 #define CONFIG_SYS_BAUDRATE_TABLE       {9600, 19200, 38400, 57600, 115200}
 
-/* There is no NOR flash, so undefine these commands */
-#undef CONFIG_CMD_FLASH
-#undef CONFIG_CMD_IMLS
-#define CONFIG_SYS_NO_FLASH
-
-/* Configure NAND storage */
-#define CONFIG_NAND_MT62XX
+/* Turn on some U-Boot commands */
 #define CONFIG_CMD_NAND
-#define CONFIG_SYS_MAX_NAND_DEVICE	1
-#define CONFIG_SYS_NAND_BASE		MTK_NFI_BASE
 #define CONFIG_CMD_MEMORY
 #define CONFIG_CMD_LOADB
 #define CONFIG_CMD_RUN
@@ -81,14 +108,6 @@
 #define CONFIG_BOOTARGS			"console=ttyMTK0,115200n8 mem=64M@0"
 #define CONFIG_BOOTCOMMAND		"bootm 0x800000"
 
-/* Memory related information */
-#define CONFIG_NR_DRAM_BANKS		1
-#define PHYS_SDRAM_1			0x00000000
-#define PHYS_SDRAM_1_SIZE		0x04000000 /* 64 MB */
-#define CONFIG_SYS_SDRAM_BASE		PHYS_SDRAM_1
-#define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_SDRAM_BASE + 0x1000)
-#define CONFIG_MAX_RAM_BANK_SIZE	0x10000000
-
 #define CONFIG_STACKSIZE		(128 * 1024)
 #ifdef CONFIG_USE_IRQ
 #  define CONFIG_STACKSIZE_IRQ		(4 * 1024)	/* IRQ stack */
@@ -97,8 +116,11 @@
 
 #define CONFIG_SYS_MEMTEST_START	0x00000000
 #define CONFIG_SYS_MEMTEST_END		0x02FFFFFF
-#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 256 * 1024)
 #define CONFIG_SYS_GBL_DATA_SIZE	128
+#define CONFIG_SYS_MALLOC_LEN		(CONFIG_ENV_SIZE + 256 * 1024)
+
+#define CONFIG_MAX_RAM_BANK_SIZE	0x10000000
+#define CONFIG_SYS_INIT_SP_ADDR		(CONFIG_SYS_SDRAM_BASE + CONFIG_STACKSIZE)
 
 /* This is needed to make hello_world.c happy */
 #define CONFIG_SYS_MAX_FLASH_SECT	512
@@ -132,4 +154,22 @@
 
 #endif /* CONFIG_MMC */
 
+#else /* CONFIG_PRELOADER */
+
+/*
+ * Configuration of U-Boot for SPL.
+ */
+#define CONFIG_STACKSIZE		1024
+#define CONFIG_SYS_MALLOC_LEN		1024
+#define INTERNAL_RAM_BASE		0x40000000
+#define CONFIG_SYS_INIT_SP_ADDR		(INTERNAL_RAM_BASE + CONFIG_STACKSIZE)
+#define CONFIG_ENV_SIZE			0x0
+
+/* Address of U-Boot in NAND */
+#define CONFIG_SYS_NAND_U_BOOT_OFFS	0x20000
+#define CONFIG_SYS_NAND_U_BOOT_SIZE	1000000		/* 1MB */
+#define CONFIG_SYS_NAND_U_BOOT_DST	0x500000
+#define CONFIG_SYS_NAND_U_BOOT_START	0x500000
+
+#endif /* CONFIG_PRELOADER */
 #endif /* __CONFIG_H */

@@ -92,6 +92,24 @@
  */
 #define ECC_SPARE_BYTE_POS	8
 
+/*
+ * Macro which counts zeroes until first set bit.
+ * This is used to avoid dividing, so no additional library is needed.
+ * It's important as this file is compiled also in SPL and there is no need
+ * to link additional library.
+ */
+#ifdef CONFIG_ARM926EJS
+  #define COUNT_ZEROES(x)       __builtin_ctz(x)
+#else
+  #define COUNT_ZEROES(x)       (ffs(x) - 1)
+#endif
+
+#ifdef CONFIG_PRELOADER
+  #define nand_print(x)
+#else
+  #define nand_print(x)	printk(KERN_ERR (x))
+#endif
+
 static void nand_ctrl_change(int cmd, int address, int *addr_cycle,
 				int write_size)
 {
@@ -192,10 +210,12 @@ static int mt62xx_nand_dev_ready(struct mtd_info *mtd)
 static void mt62xx_nand_select_chip(struct mtd_info *mtd, int chip)
 {
 	if (chip > NAND_CHIPS_MAX) {
-		printk(KERN_ERR "Wrong NAND chip number!\n");
+		nand_print("Wrong NAND chip number!\n");
 		return;
 	}
-	writel(chip, MTK_NFI_CSEL);
+
+	if (chip != -1)
+		writel(chip, MTK_NFI_CSEL);
 }
 
 static void mt62xx_nand_read_buf(struct mtd_info *mtd, uint8_t *buf, int len)
@@ -205,7 +225,7 @@ static void mt62xx_nand_read_buf(struct mtd_info *mtd, uint8_t *buf, int len)
 	int i;
 
 	if (len % 4)
-		printk(KERN_ERR "Length parameter is not aligned\n");
+		nand_print("Length parameter is not aligned\n");
 
 	for (i = 0; i < len/4; ++i)
 		buf_32[i] = readl(chip->IO_ADDR_R);
@@ -232,10 +252,10 @@ static void mt62xx_nand_write_ecc(struct mtd_info *mtd, int len)
 	uint8_t ecc[8];
 
 	/*
-	 * Two ECC blocks are combined in Sciphone G2 format,
-	 * that's why there is division by 2.
+	 * Two ECC blocks are combined on MT62xx platform,
+	 * that's why writesize is multiplied by 2.
 	 */
-	ecc_blocks = mtd->writesize/chip->ecc.size/2;
+	ecc_blocks = (mtd->writesize * 2) >> COUNT_ZEROES(chip->ecc.size);
 
 	for (ecc_nr = 0; ecc_nr < ecc_blocks; ++ecc_nr) {
 		int ecc_p, ecc_c, pos = 0;
@@ -286,7 +306,7 @@ static void mt62xx_nand_write_buf(struct mtd_info *mtd, const uint8_t *buf,
 		mt62xx_nand_write_ecc(mtd, len);
 	} else {
 		if (len % 4)
-			printk(KERN_ERR "Length parameter is not aligned\n");
+			nand_print("Length parameter is not aligned\n");
 
 		for (i = 0; i < len/4; ++i)
 			writel(buf_32[i], chip->IO_ADDR_W);
@@ -307,7 +327,7 @@ static int mt62xx_nand_ecc_calculate(struct mtd_info *mtd, const uint8_t *dat,
 	 * which is currently read. We can use it to calculate which ECC block
 	 * has been already read.
 	 */
-	*ecc_code = readw(MTK_NFI_ADDRCNTR)/chip->ecc.size;
+	*ecc_code = readw(MTK_NFI_ADDRCNTR) >> COUNT_ZEROES(chip->ecc.size);
 	return 0;
 }
 
@@ -369,6 +389,12 @@ int board_nand_init(struct nand_chip *chip)
 	       3 << NFI_ACCCON_C2R_SHIFT |
 	       7 << NFI_ACCCON_LCD2NAND_SHIFT,
 	       MTK_NFI_ACCCON);
+
+	/*
+	 * Reset NFI page format control register.
+	 * After processor reset it's not always zero what renders problems.
+	 */
+	writel(0, MTK_NFI_PAGEFMT);
 
 	/* Flush and reset NFI FIFO */
 	writel(NFI_OPCON_FIFO_FLUSH | NFI_OPCON_FIFO_RST, MTK_NFI_OPCON);
