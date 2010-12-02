@@ -65,9 +65,6 @@
 /* We have already been loaded to RAM */
 #define CONFIG_SKIP_LOWLEVEL_INIT
 
-#define CONFIG_ENV_IS_NOWHERE
-#define CONFIG_CMDLINE_TAG
-
 /* Serial port configuration */
 #define CONFIG_MT62XX_SERIAL
 #define CONFIG_MT62XX_PORTS		{0x81030000, 0x81040000, 0x81050000}
@@ -80,6 +77,9 @@
 #define CONFIG_CMD_MEMORY
 #define CONFIG_CMD_LOADB
 #define CONFIG_CMD_RUN
+#define CONFIG_CMD_SAVEENV
+#define CONFIG_CMD_MTDPARTS
+#define CONFIG_CMDLINE_TAG
 
 /* Timing configuration */
 #define CONFIG_SYS_HZ			1000
@@ -102,11 +102,20 @@
 #define CONFIG_SYS_LOAD_ADDR		0x800000
 #define CONFIG_SYS_LOADS_BAUD_CHANGE
 
-#define CONFIG_ENV_SIZE			0x20000 /* 128 Kb - one sector */
-#define CONFIG_ENV_ADDR			(0x00280000 - CONFIG_ENV_SIZE)
+#define CONFIG_ENV_IS_IN_NAND
+#define CONFIG_ENV_SIZE			0x20000	/* 128 KB - one block */
+#define CONFIG_ENV_OFFSET		0x20000
+
 #define CONFIG_BOOTDELAY		1
 #define CONFIG_BOOTARGS			"console=ttyMTK0,115200n8 mem=64M@0"
-#define CONFIG_BOOTCOMMAND		"bootm 0x800000"
+#define CONFIG_BOOTCOMMAND		\
+"nand read 0x20000 kernel; bootm 0x20000"
+
+#define CONFIG_MTD_DEVICE
+#define CONFIG_MTD_PARTITIONS
+#define MTDIDS_DEFAULT			"nand0=mt62xx_nand.0"
+#define MTDPARTS_DEFAULT		\
+"mtdparts=mt62xx_nand.0:128k(sbl),128k(env),2M(u-boot),2M(kernel),-(root)"
 
 #define CONFIG_STACKSIZE		(128 * 1024)
 #ifdef CONFIG_USE_IRQ
@@ -142,10 +151,6 @@
 /* Enable support for mmc. */
 #define CONFIG_MMC			1
 
-#ifndef DEBUG
-/* #define DEBUG */
-#endif
-
 #ifdef CONFIG_MMC
 
 /*
@@ -179,7 +184,7 @@
 #define CONFIG_ENV_SIZE			0x0
 
 /* Address of U-Boot in NAND */
-#define CONFIG_SYS_NAND_U_BOOT_OFFS	0x20000
+#define CONFIG_SYS_NAND_U_BOOT_OFFS	0x40000
 #define CONFIG_SYS_NAND_U_BOOT_SIZE	1000000		/* 1MB */
 #define CONFIG_SYS_NAND_U_BOOT_DST	0x500000
 #define CONFIG_SYS_NAND_U_BOOT_START	0x500000
