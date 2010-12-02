@@ -126,6 +126,19 @@
 #define CONFIG_SYS_MAX_FLASH_SECT	512
 #define CONFIG_SYS_MAX_FLASH_BANKS	1
 
+/*
+ * Below option allows U-Boot to save BBT table in NAND.
+ * Without this option BBT table is created everytime when first nand
+ * command is executed (except "nand dump"). Full scanning of NAND
+ * takes long time and unnecessarily delays start of platform.
+ *
+ * NOTE! This option is disabled by defaut as at startup it deletes last
+ * two blocks of NAND. Most of people run code from RAM and don't have
+ * NAND memory dumped yet. If you don't like to wait on first nand
+ * command, you should enable below option.
+ */
+//#define MT62XX_NAND_BBT_IN_NAND
+
 /* Enable support for mmc. */
 #define CONFIG_MMC			1
 

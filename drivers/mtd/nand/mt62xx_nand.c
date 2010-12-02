@@ -93,6 +93,38 @@
 #define ECC_SPARE_BYTE_POS	8
 
 /*
+ * Below tables describe layout of BBT (Bad Block Table) in OOB area.
+ * U-Boot's default layout overlaps with MTK's HW ECC position, that's
+ * why redefinition is placed here.
+ */
+#ifdef MT62XX_NAND_BBT_IN_NAND
+
+static uint8_t bbt_pattern[] = {'B', 'b', 't', '0' };
+static uint8_t mirror_pattern[] = {'1', 't', 'b', 'B' };
+
+static struct nand_bbt_descr bbt_main_descr = {
+	.options = NAND_BBT_LASTBLOCK | NAND_BBT_CREATE | NAND_BBT_WRITE
+		| NAND_BBT_2BIT | NAND_BBT_VERSION | NAND_BBT_PERCHIP,
+	.offs = 0,	/* offset changed as default one overlaps with HW ECC */
+	.len = 4,
+	.veroffs = 14,	/* offset changed as default one overlaps with HW ECC */
+	.maxblocks = 4,
+	.pattern = bbt_pattern
+};
+
+static struct nand_bbt_descr bbt_mirror_descr = {
+	.options = NAND_BBT_LASTBLOCK | NAND_BBT_CREATE | NAND_BBT_WRITE
+		| NAND_BBT_2BIT | NAND_BBT_VERSION | NAND_BBT_PERCHIP,
+	.offs = 0,	/* offset changed as default one overlaps with HW ECC */
+	.len = 4,
+	.veroffs = 14,	/* offset changed as default one overlaps with HW ECC */
+	.maxblocks = 4,
+	.pattern = mirror_pattern
+};
+
+#endif
+
+/*
  * Macro which counts zeroes until first set bit.
  * This is used to avoid dividing, so no additional library is needed.
  * It's important as this file is compiled also in SPL and there is no need
@@ -245,27 +277,27 @@ static uint8_t mt62xx_nand_read_byte(struct mtd_info *mtd)
 	return byte;
 }
 
-static void mt62xx_nand_write_ecc(struct mtd_info *mtd, int len)
+static void mt62xx_nand_write_buf_ecc(struct mtd_info *mtd, const uint8_t *buffer)
 {
 	int i, ecc_nr, ecc_blocks;
 	struct nand_chip *chip = mtd->priv;
-	uint8_t ecc[8];
+	uint8_t *buf = (uint8_t *)buffer;
+
+	/*
+	 * After this write ECC calculations will
+	 * be available in NFI_PAR_P and NFI_PAR_C registers.
+	 */
+	writel(*((uint32_t *)buf), chip->IO_ADDR_W);
 
 	/*
 	 * Two ECC blocks are combined on MT62xx platform,
-	 * that's why writesize is multiplied by 2.
+	 * that's why there is division by 2.
 	 */
-	ecc_blocks = (mtd->writesize * 2) >> COUNT_ZEROES(chip->ecc.size);
+	ecc_blocks = (mtd->writesize >> COUNT_ZEROES(chip->ecc.size))/2;
+	buf += ECC_SPARE_BYTE_POS;
 
 	for (ecc_nr = 0; ecc_nr < ecc_blocks; ++ecc_nr) {
-		int ecc_p, ecc_c, pos = 0;
-
-		/*
-		 * After first write in this loop, ECC calculations will
-		 * be available in NFI_PAR_P and NFI_PAR_C registers.
-		 */
-		for (i = 0; i < ECC_SPARE_BYTE_POS/4; ++i)
-			writel(~0, chip->IO_ADDR_W);
+		int ecc_p, ecc_c;
 
 		/*
 		 * Read calculated ECC bytes and write them
@@ -274,18 +306,11 @@ static void mt62xx_nand_write_ecc(struct mtd_info *mtd, int len)
 		for (i = 0; i < 2; ++i) {
 			ecc_p = readw((uint32_t *)MTK_NFI_PAR_0P + ecc_nr*2 + i*2);
 			ecc_c = readw((uint32_t *)MTK_NFI_PAR_0C + ecc_nr*2 + i*2);
-			ecc[pos++] = ecc_p >> 4;
-			ecc[pos++] = ((ecc_p & 0x0F) << 4) | (ecc_c >> 8);
-			ecc[pos++] = ecc_c & 0xFF;
+			*(buf++) = ecc_p >> 4;
+			*(buf++) = ((ecc_p & 0x0F) << 4) | (ecc_c >> 8);
+			*(buf++) = ecc_c & 0xFF;
 		}
-
-		/* Fill rest of buffer with 0xFF */
-		while (pos < sizeof(ecc))
-			ecc[pos++] = 0xFF;
-
-		/* Write calculated ECC bytes */
-		for (i = 0; i < sizeof(ecc)/4; ++i)
-			writel(((uint32_t *)ecc)[i], chip->IO_ADDR_W);
+		buf += 16;
 	}
 }
 
@@ -294,7 +319,7 @@ static void mt62xx_nand_write_buf(struct mtd_info *mtd, const uint8_t *buf,
 {
 	uint32_t *buf_32 = (uint32_t *)buf;
 	struct nand_chip *chip = mtd->priv;
-	int i;
+	int i = 0;
 
 	/* Writing in spare area? */
 	if (readw(MTK_NFI_ADDRCNTR) >= mtd->writesize) {
@@ -303,14 +328,14 @@ static void mt62xx_nand_write_buf(struct mtd_info *mtd, const uint8_t *buf,
 		 * additional read/write cycle, ECC calculations
 		 * are handled here.
 		 */
-		mt62xx_nand_write_ecc(mtd, len);
-	} else {
-		if (len % 4)
-			nand_print("Length parameter is not aligned\n");
+		mt62xx_nand_write_buf_ecc(mtd, buf);
 
-		for (i = 0; i < len/4; ++i)
-			writel(buf_32[i], chip->IO_ADDR_W);
+		/* Increment index as above function already written 32 bytes */
+		i++;
 	}
+
+	for (; i < len/4; ++i)
+		writel(buf_32[i], chip->IO_ADDR_W);
 }
 
 static int mt62xx_nand_ecc_calculate(struct mtd_info *mtd, const uint8_t *dat,
@@ -417,6 +442,18 @@ int board_nand_init(struct nand_chip *chip)
 	chip->read_byte = mt62xx_nand_read_byte;
 	chip->write_buf = mt62xx_nand_write_buf;
 	chip->select_chip = mt62xx_nand_select_chip;
+
+	/*
+	 * Below option allows U-Boot to save BBT table in NAND.
+	 * Without this option BBT table is created everytime when first nand
+	 * command is executed (except "nand dump"). Full scanning of NAND
+	 * takes long time and unnecessarily delays start of platform.
+	 */
+#ifdef MT62XX_NAND_BBT_IN_NAND
+	chip->options |= NAND_USE_FLASH_BBT;
+	chip->bbt_td = &bbt_main_descr;
+	chip->bbt_md = &bbt_mirror_descr;
+#endif
 
 	/* ECC settings */
 	chip->ecc.mode = NAND_ECC_HW;
