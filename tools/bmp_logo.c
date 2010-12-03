@@ -41,7 +41,7 @@ int error (char * msg, FILE *fp)
 
 int main (int argc, char *argv[])
 {
-	int	i, x;
+	int	i, x, padding;
 	FILE	*fp;
 	bitmap_t bmp;
 	bitmap_t *b = &bmp;
@@ -138,11 +138,17 @@ int main (int argc, char *argv[])
 	printf ("};\n");
 	printf ("\n");
 	printf ("unsigned char bmp_logo_bitmap[] = {\n");
+	/* check if there will be any padding bytes in bitmap */
+	padding = (b->width % 4) ? (4 - (b->width % 4)) : 0;
+
 	for (i=(b->height-1)*b->width; i>=0; i-=b->width) {
 		for (x = 0; x < b->width; x++) {
-			b->data[(uint16_t) i + x] = (uint8_t) fgetc (fp) \
+			b->data[i + x] = (uint8_t) fgetc (fp) \
 						+ DEFAULT_CMAP_SIZE;
 		}
+		for (x = 0; x < padding; ++x)
+			/* read padding bytes if any */
+			fgetc(fp);
 	}
 	fclose (fp);
 
