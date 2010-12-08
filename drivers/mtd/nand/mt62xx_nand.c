@@ -259,8 +259,11 @@ static void mt62xx_nand_read_buf(struct mtd_info *mtd, uint8_t *buf, int len)
 	if (len % 4)
 		nand_print("Length parameter is not aligned\n");
 
-	for (i = 0; i < len/4; ++i)
+	for (i = 0; i < len/4; ++i) {
+		while(readl(MTK_NFI_FIFOSTA) & NFI_FIFOSTA_RD_EMPTY)
+			;
 		buf_32[i] = readl(chip->IO_ADDR_R);
+	}
 }
 
 static uint8_t mt62xx_nand_read_byte(struct mtd_info *mtd)
@@ -271,6 +274,8 @@ static uint8_t mt62xx_nand_read_byte(struct mtd_info *mtd)
 
 	/* Enable byte mode reading */
 	writel(nfi_con | NFI_CON_BYTE_RW, MTK_NFI_CON);
+	while(readl(MTK_NFI_FIFOSTA) & NFI_FIFOSTA_RD_EMPTY)
+		;
 	byte = readb(chip->IO_ADDR_R);
 	/* Disable byte mode reading */
 	writel(nfi_con & ~NFI_CON_BYTE_RW, MTK_NFI_CON);
@@ -283,6 +288,8 @@ static void mt62xx_nand_write_buf_ecc(struct mtd_info *mtd, const uint8_t *buffe
 	struct nand_chip *chip = mtd->priv;
 	uint8_t *buf = (uint8_t *)buffer;
 
+	while(readl(MTK_NFI_FIFOSTA) & NFI_FIFOSTA_WR_FULL)
+		;
 	/*
 	 * After this write ECC calculations will
 	 * be available in NFI_PAR_P and NFI_PAR_C registers.
@@ -334,8 +341,11 @@ static void mt62xx_nand_write_buf(struct mtd_info *mtd, const uint8_t *buf,
 		i++;
 	}
 
-	for (; i < len/4; ++i)
+	for (; i < len/4; ++i) {
+		while(readl(MTK_NFI_FIFOSTA) & NFI_FIFOSTA_WR_FULL)
+			;
 		writel(buf_32[i], chip->IO_ADDR_W);
+	}
 }
 
 static int mt62xx_nand_ecc_calculate(struct mtd_info *mtd, const uint8_t *dat,
