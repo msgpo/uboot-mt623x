@@ -24,6 +24,7 @@
 #include <nand.h>
 #include <asm/io.h>
 #include <linux/err.h>
+#include <asm/arch-mtk/vibra.h>
 
 /*
  * SPL has no malloc availble and below are definitions of some temporary
@@ -439,6 +440,8 @@ void nand_boot(void)
 	nand_info_t *mtd = nand_info;
 	__attribute__((noreturn)) void (*uboot)(void);
 
+	vibra_on();
+
 	/*
 	 * Init board specific nand support
 	 */
@@ -475,6 +478,8 @@ void nand_boot(void)
 
 	if (chip.select_chip)
 		chip.select_chip(mtd, -1);
+
+	vibra_off();
 
 	/*
 	 * Jump to U-Boot image

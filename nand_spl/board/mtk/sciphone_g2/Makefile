@@ -35,7 +35,7 @@ AFLAGS	+= -DCONFIG_PRELOADER -DCONFIG_NAND_SPL -DCONFIG_SYS_TEXT_BASE=$(CONFIG_S
 CFLAGS	+= -DCONFIG_PRELOADER -DCONFIG_NAND_SPL -DCONFIG_SYS_TEXT_BASE=$(CONFIG_SYS_TEXT_BASE)
 
 SOBJS	= start.o lowlevel_init.o
-COBJS	= nand_boot_detect.o mt62xx_nand.o nand_ids.o
+COBJS	= nand_boot_detect.o mt62xx_nand.o nand_ids.o vibra.o
 
 SRCS	:= $(addprefix $(obj),$(SOBJS:.o=.S) $(COBJS:.o=.c))
 OBJS	:= $(addprefix $(obj),$(SOBJS) $(COBJS))
@@ -68,11 +68,15 @@ $(nandobj)u-boot.lds: $(LDSCRIPT)
 $(obj)%.o:	$(SRCTREE)/arch/arm/cpu/arm926ejs/%.S
 	$(CC) $(AFLAGS) -c -o $@ $<
 
+$(obj)%.o:	$(SRCTREE)/arch/arm/cpu/arm926ejs/$(VENDOR)/%.c
+	$(CC) $(AFLAGS) -c -o $@ $<
+
 $(obj)%.o:	$(SRCTREE)/nand_spl/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 $(obj)%.o:	$(SRCTREE)/drivers/mtd/nand/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
+
 
 # defines $(obj).depend target
 include $(SRCTREE)/rules.mk
