@@ -127,7 +127,7 @@ ifeq ($(VENDOR),syteco)
 LOGO_BMP= logos/syteco.bmp
 endif
 ifeq ($(VENDOR),mtk)
-LOGO_BMP= logos/osmocom.bmp
+LOGO_BMP= logos/osmocombb.bmp
 #LOGO_MODE= -rgb565
 endif
 
