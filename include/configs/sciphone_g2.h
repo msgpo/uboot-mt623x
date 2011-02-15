@@ -103,14 +103,21 @@
 #define CONFIG_SYS_LOAD_ADDR		0x800000
 #define CONFIG_SYS_LOADS_BAUD_CHANGE
 
-#define CONFIG_ENV_IS_IN_NAND
+/*
+ * Environment in NAND option is disabled to protect phone by accidentaly saving
+ * environment variables in NAND (using 'saveenv' command). Most people have no
+ * dump of their flash and that would lead to corrupting original firmware.
+ */
+//#define CONFIG_ENV_IS_IN_NAND
+#define CONFIG_ENV_IS_NOWHERE
 #define CONFIG_ENV_SIZE			0x20000	/* 128 KB - one block */
 #define CONFIG_ENV_OFFSET		0x20000
 
 #define CONFIG_BOOTDELAY		1
-#define CONFIG_BOOTARGS			"console=ttyMTK0,115200n8 mem=64M@0"
+#define CONFIG_BOOTARGS			\
+	"console=ttyMTK0,115200n8 mem=64M@0 root=/dev/mmcblk0p1 rootdelay=2"
 #define CONFIG_BOOTCOMMAND		\
-"nand read 0x20000 kernel; bootm 0x20000"
+	"mmcinfo; ext2load mmc 0 0x800000 /boot/uImage; bootm 0x800000"
 
 #define CONFIG_MTD_DEVICE
 #define CONFIG_MTD_PARTITIONS
