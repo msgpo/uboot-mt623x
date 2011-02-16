@@ -533,7 +533,7 @@ void lcd_disable(void)
 	DEBUG_LINE();
 
 	/* Stop control of LCD frame transfer. */
-	writew(LCD_START_START, (~LCD_START));
+	 writew((unsigned short)~LCD_START_START, LCD_START);
 
 	/* Turn off the LCD block in MTK. */
 	writew(PDN_CON1_LCD, MTK_CONFG_PDN_SET1);

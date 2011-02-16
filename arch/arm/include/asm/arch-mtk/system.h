@@ -192,4 +192,39 @@
 #define PLL_PDN_CON_PLL		(1 << 13)
 #define PLL_PDN_CON_DSP_DIV2	(1 << 15)
 
+/* PMIC registry. */
+#define MTK_PMIC_CON0		0x83010800
+#define MTK_PMIC_CON1		0x83010804
+#define MTK_PMIC_CON2		0x83010808
+#define MTK_PMIC_CON3		0x8301080C
+#define MTK_PMIC_CON4		0x83010810
+#define MTK_PMIC_CON5		0x83010814
+#define MTK_PMIC_CON6		0x83010818
+#define MTK_PMIC_CON7		0x8301081C
+#define MTK_PMIC_CON8		0x83010820
+#define MTK_PMIC_CON9		0x83010824
+#define MTK_PMIC_CONA		0x83010828
+#define MTK_PMIC_CONB		0x8301082C
+#define MTK_PMIC_CONC		0x83010830
+#define MTK_PMIC_COND		0x83010834
+#define MTK_PMIC_CONE		0x83010838
+#define MTK_PMIC_CONF		0x8301083C
+#define MTK_PMIC_CONG		0x83010840
+
+/* MTK_PMIC_CON5 bit field definitions. */
+#define PMIC_CON5_VIBR_EN	(1 << 0)
+#define PMIC_CON5_KPLED_EN	(1 << 1)
+#define PMIC_CON5_RLED_EN	(1 << 2)
+#define PMIC_CON5_GLED_EN	(1 << 3)
+#define PMIC_CON5_BLED_EN	(1 << 4)
+#define PMIC_CON5_INT_NODE_MUX	(1 << 5)
+#define PMIC_CON5_VSIM_EN	(1 << 8)
+#define PMIC_CON5_VSIM_SEL	(1 << 9)
+#define PMIC_CON5_OVP		(1 << 10)
+#define PMIC_CON5_CHRDET	(1 << 11)
+#define PMIC_CON5_BAT_ON	(1 << 12)
+#define PMIC_CON5_AC_DET	(1 << 13)
+#define PMIC_CON5_CV		(1 << 14)
+#define PMIC_CON5_CHRG_DIS	(1 << 15)
+
 #endif

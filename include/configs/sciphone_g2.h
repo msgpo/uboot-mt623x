@@ -79,6 +79,7 @@
 #define CONFIG_CMD_RUN
 #define CONFIG_CMD_SAVEENV
 #define CONFIG_CMD_MTDPARTS
+#define CONFIG_CMD_VIBRATE
 #define CONFIG_CMDLINE_TAG
 
 /* Timing configuration */
