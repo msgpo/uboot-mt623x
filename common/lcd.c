@@ -335,6 +335,7 @@ int drv_lcd_init (void)
 
 	lcd_init (lcd_base);		/* LCD initialization */
 
+#ifdef CONFIG_LCD_CONSOLE
 	/* Device initialization */
 	memset (&lcddev, 0, sizeof (lcddev));
 
@@ -345,6 +346,7 @@ int drv_lcd_init (void)
 	lcddev.puts  = lcd_puts;		/* 'puts' function */
 
 	rc = stdio_register (&lcddev);
+#endif
 
 	return (rc == 0) ? 1 : rc;
 }
@@ -500,7 +502,11 @@ void bitmap_plot (int x, int y)
 	ushort *cmap;
 #endif
 	ushort i, j;
+#if defined CONFIG_BMP_565_RGB
+	ushort *bmap;
+#else
 	uchar *bmap;
+#endif
 	uchar *fb;
 	ushort *fb16;
 #if defined CONFIG_PXA250 || defined CONFIG_PXA27X || defined CONFIG_CPU_MONAHANS
@@ -510,9 +516,11 @@ void bitmap_plot (int x, int y)
 	volatile cpm8xx_t *cp = &(immr->im_cpm);
 #endif
 
+#ifndef CONFIG_BMP_565_RGB
 	debug ("Logo: width %d  height %d  colors %d  cmap %d\n",
 		BMP_LOGO_WIDTH, BMP_LOGO_HEIGHT, BMP_LOGO_COLORS,
 		(int)(sizeof(bmp_logo_palette)/(sizeof(ushort))));
+#endif
 
 	bmap = &bmp_logo_bitmap[0];
 	fb   = (uchar *)(lcd_base + y * lcd_line_length + x);
@@ -570,16 +578,23 @@ void bitmap_plot (int x, int y)
 		}
 	}
 	else { /* true color mode */
+#ifndef CONFIG_BMP_565_RGB
 		u16 col16;
+#endif
 		fb16 = (ushort *)(lcd_base + y * lcd_line_length + x);
 		for (i=0; i<BMP_LOGO_HEIGHT; ++i) {
 			for (j=0; j<BMP_LOGO_WIDTH; j++) {
+#ifdef CONFIG_BMP_565_RGB
+				fb16[j] = bmap[j];
+#else
 				col16 = bmp_logo_palette[(bmap[j]-16)];
 				fb16[j] =
 					((col16 & 0x000F) << 1) |
 					((col16 & 0x00F0) << 3) |
 					((col16 & 0x0F00) << 4);
-				}
+#endif
+			}
+
 			bmap += BMP_LOGO_WIDTH;
 			fb16 += panel_info.vl_col;
 		}
@@ -610,6 +625,7 @@ int lcd_display_bitmap(ulong bmp_image, int x, int y)
 	uchar *fb;
 	bmp_image_t *bmp=(bmp_image_t *)bmp_image;
 	uchar *bmap;
+
 	ushort padded_line;
 	unsigned long width, height, byte_width;
 	unsigned long pwidth = panel_info.vl_col;

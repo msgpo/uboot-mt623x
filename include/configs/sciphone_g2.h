@@ -149,28 +149,47 @@
 //#define MT62XX_NAND_BBT_IN_NAND
 
 /* Enable support for mmc. */
-#define CONFIG_MMC			1
+#define CONFIG_MMC
+/* Enable LCD frame buffer facility. */
+#define CONFIG_LCD
 
 #ifdef CONFIG_MMC
 
-/*
- * The MMC/SD support for is done through the Generic MMC framework
- * of u-boot. Following options shall be enabled in the default configuration
- * to include MMC/SD support.
- */
-#define CONFIG_GENERIC_MMC
-#define CONFIG_CMD_MMC
-#define CONFIG_MTK_MMC
+  /*
+   * The MMC/SD support for is done through the Generic MMC framework
+   * of u-boot. Following options shall be enabled in the default configuration
+   * to include MMC/SD support.
+   */
+  #define CONFIG_GENERIC_MMC
+  #define CONFIG_CMD_MMC
+  #define CONFIG_MTK_MMC
 
-/*
- * To include File system support for MMC, following configuration options
- * shall be enabled
- */
-#define CONFIG_DOS_PARTITION
-#define CONFIG_CMD_EXT2
-#define CONFIG_CMD_FAT
+  /*
+   * To include File system support for MMC, following configuration options
+   * shall be enabled
+   */
+  #define CONFIG_DOS_PARTITION
+  #define CONFIG_CMD_EXT2
+  #define CONFIG_CMD_FAT
 
 #endif /* CONFIG_MMC */
+
+#ifdef CONFIG_LCD
+
+  #define CONFIG_LCD_LOGO
+//  #define CONFIG_LCD_INFO
+//  #define CONFIG_LCD_CONSOLE
+  #define CONFIG_SYS_BLACK_ON_WHITE
+
+  #define CONFIG_MTK_LCD
+
+  /* Choose LCD module controller. */
+  #define CONFIG_MTK_LCD_ILI93XX
+
+  #ifdef CONFIG_MTK_LCD_ILI93XX
+    #define LCD_BPP				LCD_COLOR16
+  #endif /* CONFIG_MTK_LCD_ILI93XX */
+#endif /* CONFIG_LCD */
 
 #else /* CONFIG_PRELOADER */
 

@@ -25,7 +25,10 @@ include $(TOPDIR)/config.mk
 
 LIB	= $(obj)lib$(SOC).o
 
-COBJS	= timer.o reset.o
+COBJS-y	= timer.o reset.o
+COBJS-$(CONFIG_MTK_LCD) += lcd_backlight.o
+
+COBJS := $(COBJS-y)
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS)) $(addprefix $(obj),$(SOBJS))

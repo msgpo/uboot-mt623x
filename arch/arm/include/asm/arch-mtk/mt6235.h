@@ -22,6 +22,8 @@
 
 #ifndef __MT6235_H
 #define __MT6235_H
+/* Internal bank addresses */
+#define MTK_LCD_BASE		0x90000000
 
 /* Peripheral base addresses */
 #define MTK_EFUSE_BASE		0x80000000

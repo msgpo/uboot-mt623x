@@ -1,6 +1,7 @@
 #
 # (C) Copyright 2000-2006
 # Wolfgang Denk, DENX Software Engineering, wd@denx.de.
+
 #
 # See file CREDITS for list of people who contributed to this
 # project.
@@ -125,6 +126,10 @@ endif
 ifeq ($(VENDOR),syteco)
 LOGO_BMP= logos/syteco.bmp
 endif
+ifeq ($(VENDOR),mtk)
+LOGO_BMP= logos/osmocom.bmp
+#LOGO_MODE= -rgb565
+endif
 
 # now $(obj) is defined
 HOSTSRCS += $(addprefix $(SRCTREE)/,$(EXT_OBJ_FILES-y:.o=.c))
@@ -223,7 +228,11 @@ else
 endif
 
 $(LOGO_H):	$(obj)bmp_logo $(LOGO_BMP)
+ifeq ($(VENDOR),mtk)
+	$(obj)./bmp_logo $(LOGO_BMP) $(LOGO_MODE) >$@
+else
 	$(obj)./bmp_logo $(LOGO_BMP) >$@
+endif
 
 #########################################################################
 
