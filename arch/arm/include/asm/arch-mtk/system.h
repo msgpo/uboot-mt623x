@@ -47,6 +47,9 @@
 #define MTK_CONFG_PDN_CLR1	(MTK_CONFG_BASE + 0x324)
 #define MTK_CONFG_PDN_CLR2	(MTK_CONFG_BASE + 0x328)
 #define MTK_CONFG_PDN_CLR3	(MTK_CONFG_BASE + 0x32C)
+#define MTK_CONFG_PDN_CON4	(MTK_CONFG_BASE + 0x330)
+#define MTK_CONFG_PDN_SET4	(MTK_CONFG_BASE + 0x334)
+#define MTK_CONFG_PDN_CLR4	(MTK_CONFG_BASE + 0x338)
 
 /* CONFG_MCUCLK_CON bit fields definitions */
 #define MCUCLK_CON_AHBX8CLK_SHIFT	(0)
@@ -90,6 +93,16 @@
 #define PDN_CON2_BPI		(1 << 3)
 #define PDN_CON2_AFC		(1 << 4)
 #define PDN_CON2_APC		(1 << 5)
+#define PDN_CON2_FCS		(1 << 6)
+#define PDN_CON2_AUXAD		(1 << 7)
+#define PDN_CON2_VAFE		(1 << 8)
+#define PDN_CON2_BFE		(1 << 9)
+#define PDN_CON2_GCC		(1 << 10)
+#define PDN_CON2_DIV		(1 << 11)
+#define PDN_CON2_AAFE		(1 << 12)
+#define PDN_CON2_I2C		(1 << 13)
+#define PDN_CON2_BBRX		(1 << 14)
+#define PDN_CON2_GMSK		(1 << 14)
 
 /*
  * Reset Generation Unit block section

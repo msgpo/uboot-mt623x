@@ -29,7 +29,7 @@ include $(TOPDIR)/config.mk
 
 LIB	= $(obj)lib$(BOARD).o
 
-COBJS	:= sciphone_g2.o
+COBJS	:= sciphone_g2.o mt6140.o
 
 SRCS	:= $(SOBJS:.o=.S) $(COBJS:.o=.c)
 OBJS	:= $(addprefix $(obj),$(COBJS))
